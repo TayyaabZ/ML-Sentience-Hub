@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.VectorAssembler","timestamp":1779184276340,"sparkVersion":"4.1.1","uid":"VectorAssembler_0f5cc75fecf8","paramMap":{"inputCols":["kw_draw","temperature_c","voltage_drop","sector_id_idx"],"outputCol":"features"},"defaultParamMap":{"handleInvalid":"error","outputCol":"VectorAssembler_0f5cc75fecf8__output"}}
