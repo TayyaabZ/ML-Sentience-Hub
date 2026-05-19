@@ -48,12 +48,63 @@ The system addresses two distinct real-world problems through independent PySpar
 
 ## 📂 Project Structure
 
-```text
-The ML Sentience Hub/
-├── data_forge.py                  # Synthetic dataset generator
-├── dashboard.py                   # Unified Streamlit UI
-├── requirements.txt               # Python dependencies
-├── aegis_vanguard/
-│   └── bot_detector.py            # Module Alpha ML pipeline
-└── nexus_grid/
-    └── grid_predictor.py          # Module Beta ML pipeline
+    The ML Sentience Hub/
+    ├── data_forge.py                  # Synthetic dataset generator
+    ├── dashboard.py                   # Unified Streamlit UI
+    ├── requirements.txt               # Python dependencies
+    ├── aegis_vanguard/
+    │   └── bot_detector.py            # Module Alpha ML pipeline
+    └── nexus_grid/
+        └── grid_predictor.py          # Module Beta ML pipeline
+
+*(Note: `data/` and `models/` directories are intentionally excluded from version control due to file size constraints. The pipeline is designed to be fully reproducible from source.)*
+
+---
+
+## 🚀 Execution Instructions (Reproducibility)
+
+Follow these steps to build the datasets, train the models, and launch the UI from scratch.
+
+### 1. Prerequisites
+* **OS:** Linux (Fedora recommended)
+* **Python:** 3.14
+* **Java:** OpenJDK 21 LTS
+
+### 2. Setup Environment
+Clone the repository and install dependencies:
+
+    git clone <your-github-repo-url>
+    cd ML-Sentience-Hub
+    python -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+
+
+### 3. Generate the Datasets
+Run the data forge to generate `aegis_raw_logs.csv` and `nexus_raw_telemetry.csv`.
+
+    python data_forge.py
+
+
+### 4. Train & Serialize the Models
+Run the distributed training pipelines. These scripts clean the data, train the classifiers, and save the models to a local `models/` directory.
+
+    python aegis_vanguard/bot_detector.py
+    python nexus_grid/grid_predictor.py
+
+
+### 5. Launch the Sentience Hub
+Start the Streamlit web application for live inference:
+
+    streamlit run dashboard.py
+
+
+---
+
+## 👥 Authors
+
+* **Muhammad Tayyaab Zahoor**
+* **Anood Tayyeba Imtiaz**
+
+**Course:** Big Data Analytics (Spring 2026)
+**Instructor:** Ms. Ameena Saeed
