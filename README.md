@@ -73,7 +73,7 @@ Follow these steps to build the datasets, train the models, and launch the UI fr
 ### 2. Setup Environment
 Clone the repository and install dependencies:
 
-    git clone <your-github-repo-url>
+    git clone https://github.com/TayyaabZ/ML-Sentience-Hub
     cd ML-Sentience-Hub
     python -m venv venv
     source venv/bin/activate
