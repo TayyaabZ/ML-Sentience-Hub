@@ -101,10 +101,10 @@ Start the Streamlit web application for live inference:
 
 ---
 
-## 👥 Authors
+## 👥 Author
 
 * **Muhammad Tayyaab Zahoor**
-* **Anood Tayyeba Imtiaz**
+
 
 **Course:** Big Data Analytics (Spring 2026)
 **Instructor:** Ms. Ameena Saeed
