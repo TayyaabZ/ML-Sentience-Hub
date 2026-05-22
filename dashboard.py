@@ -63,7 +63,7 @@ section = st.sidebar.radio(
 
 
 if section == "🛡️ AEGIS — Traffic Monitor":
-    tabs = st.tabs(["Live Detection", "Analytics"])
+    tabs = st.tabs(["Live Detection", "Analytics", "Feature Insights"])
 
     with tabs[0]:
         session_duration_sec = st.number_input(
@@ -192,9 +192,93 @@ if section == "🛡️ AEGIS — Traffic Monitor":
         )
         st.dataframe([row.asDict() for row in bot_rows], width="stretch")
 
+    with tabs[2]:
+        sample_rows = pred_df.sample(False, 0.015, seed=42).collect()
+        human_rows = [row for row in sample_rows if float(row["prediction"]) == 0.0]
+        bot_rows = [row for row in sample_rows if float(row["prediction"]) == 1.0]
+
+        human_x = [float(row["click_velocity_bps"]) for row in human_rows]
+        human_y = [int(row["pages_viewed"]) for row in human_rows]
+        human_text = [
+            f"Click Velocity: {float(row['click_velocity_bps']):.2f} | Pages: {int(row['pages_viewed'])} | Label: Human"
+            for row in human_rows
+        ]
+
+        bot_x = [float(row["click_velocity_bps"]) for row in bot_rows]
+        bot_y = [int(row["pages_viewed"]) for row in bot_rows]
+        bot_text = [
+            f"Click Velocity: {float(row['click_velocity_bps']):.2f} | Pages: {int(row['pages_viewed'])} | Label: Bot"
+            for row in bot_rows
+        ]
+
+        scatter_fig = go.Figure(
+            data=[
+                go.Scatter(
+                    x=human_x,
+                    y=human_y,
+                    mode="markers",
+                    name="Human",
+                    text=human_text,
+                    marker=dict(size=4, opacity=0.6, color="#00ff41"),
+                ),
+                go.Scatter(
+                    x=bot_x,
+                    y=bot_y,
+                    mode="markers",
+                    name="Bot",
+                    text=bot_text,
+                    marker=dict(size=4, opacity=0.6, color="#ff0000"),
+                ),
+            ]
+        )
+        scatter_fig.update_layout(
+            title="Click Velocity vs Pages Viewed — Bot Detection Boundary",
+            paper_bgcolor="#0a0a0a",
+            plot_bgcolor="#0a0a0a",
+            font=dict(color="#00ff41"),
+            xaxis=dict(title="click_velocity_bps"),
+            yaxis=dict(title="pages_viewed"),
+            legend=dict(title="Prediction"),
+        )
+        st.plotly_chart(scatter_fig, width="stretch")
+        st.caption(
+            "Each dot is one session. Red dots are predicted bots. "
+            "The model learned that sessions with high click velocity AND "
+            "high page counts are bots. Hover over any point to see its values."
+        )
+
+        prob_rows = pred_df.select("probability", "prediction").limit(500).collect()
+        bot_confidence = [
+            float(row["probability"][1])
+            for row in prob_rows
+            if float(row["prediction"]) == 1.0
+        ]
+        conf_fig = go.Figure(
+            data=[
+                go.Histogram(
+                    x=bot_confidence,
+                    marker_color="#ff0000",
+                )
+            ]
+        )
+        conf_fig.update_layout(
+            title="Bot Detection Confidence Distribution",
+            paper_bgcolor="#0a0a0a",
+            plot_bgcolor="#0a0a0a",
+            font=dict(color="#00ff41"),
+            xaxis=dict(title="Confidence Score (0-1)"),
+            yaxis=dict(title="Number of Sessions"),
+        )
+        st.plotly_chart(conf_fig, width="stretch")
+        st.caption(
+            "A confidence score near 1.0 means the model is very "
+            "certain this is a bot. Scores near 0.5 indicate borderline cases "
+            "where the model is less certain."
+        )
+
 
 if section == "⚡ NEXUS — Grid Predictor":
-    tabs = st.tabs(["Live Prediction", "Grid Analytics"])
+    tabs = st.tabs(["Live Prediction", "Grid Analytics", "Overload Analysis"])
 
     with tabs[0]:
         kw_draw = st.number_input(
@@ -294,3 +378,109 @@ if section == "⚡ NEXUS — Grid Predictor":
             .collect()
         )
         st.dataframe([row.asDict() for row in overload_rows], width="stretch")
+
+    with tabs[2]:
+        sample_rows = pred_df.sample(False, 0.015, seed=42).collect()
+        normal_rows = [row for row in sample_rows if float(row["prediction"]) == 0.0]
+        overload_rows = [row for row in sample_rows if float(row["prediction"]) == 1.0]
+
+        normal_x = [float(row["kw_draw"]) for row in normal_rows]
+        normal_y = [float(row["temperature_c"]) for row in normal_rows]
+        normal_text = [
+            f"Sector: {row['sector_id']} | Power: {float(row['kw_draw']):.1f} kW | Temp: {float(row['temperature_c']):.1f}°C | Status: Normal"
+            for row in normal_rows
+        ]
+
+        overload_x = [float(row["kw_draw"]) for row in overload_rows]
+        overload_y = [float(row["temperature_c"]) for row in overload_rows]
+        overload_text = [
+            f"Sector: {row['sector_id']} | Power: {float(row['kw_draw']):.1f} kW | Temp: {float(row['temperature_c']):.1f}°C | Status: Overload"
+            for row in overload_rows
+        ]
+
+        scatter_fig = go.Figure(
+            data=[
+                go.Scatter(
+                    x=normal_x,
+                    y=normal_y,
+                    mode="markers",
+                    name="Normal",
+                    text=normal_text,
+                    marker=dict(size=5, opacity=0.6, color="#00ff41"),
+                ),
+                go.Scatter(
+                    x=overload_x,
+                    y=overload_y,
+                    mode="markers",
+                    name="Overload",
+                    text=overload_text,
+                    marker=dict(size=5, opacity=0.6, color="#ff4444"),
+                ),
+            ]
+        )
+        scatter_fig.update_layout(
+            title="Power Draw vs Temperature — Overload Detection Boundary",
+            paper_bgcolor="#0a0a0a",
+            plot_bgcolor="#0a0a0a",
+            font=dict(color="#00ff41"),
+            xaxis=dict(title="kw_draw"),
+            yaxis=dict(title="temperature_c"),
+            legend=dict(title="Prediction"),
+        )
+        st.plotly_chart(scatter_fig, width="stretch")
+        st.caption(
+            "Each dot is one sensor reading. Red dots are predicted "
+            "overloads. The model learned that high power draw combined with high "
+            "temperature simultaneously indicates an overload condition. "
+            "Hover over any point to see the sector and full reading."
+        )
+
+        normal_x = [float(row["kw_draw"]) for row in normal_rows]
+        normal_y = [float(row["voltage_drop"]) for row in normal_rows]
+        normal_text = [
+            f"Sector: {row['sector_id']} | Power: {float(row['kw_draw']):.1f} kW | Voltage Drop: {float(row['voltage_drop']):.1f}V"
+            for row in normal_rows
+        ]
+
+        overload_x = [float(row["kw_draw"]) for row in overload_rows]
+        overload_y = [float(row["voltage_drop"]) for row in overload_rows]
+        overload_text = [
+            f"Sector: {row['sector_id']} | Power: {float(row['kw_draw']):.1f} kW | Voltage Drop: {float(row['voltage_drop']):.1f}V"
+            for row in overload_rows
+        ]
+
+        voltage_fig = go.Figure(
+            data=[
+                go.Scatter(
+                    x=normal_x,
+                    y=normal_y,
+                    mode="markers",
+                    name="Normal",
+                    text=normal_text,
+                    marker=dict(size=5, opacity=0.6, color="#00ff41"),
+                ),
+                go.Scatter(
+                    x=overload_x,
+                    y=overload_y,
+                    mode="markers",
+                    name="Overload",
+                    text=overload_text,
+                    marker=dict(size=5, opacity=0.6, color="#ff4444"),
+                ),
+            ]
+        )
+        voltage_fig.update_layout(
+            title="Power Draw vs Voltage Drop — Secondary Overload Indicator",
+            paper_bgcolor="#0a0a0a",
+            plot_bgcolor="#0a0a0a",
+            font=dict(color="#00ff41"),
+            xaxis=dict(title="kw_draw"),
+            yaxis=dict(title="voltage_drop"),
+            legend=dict(title="Prediction"),
+        )
+        st.plotly_chart(voltage_fig, width="stretch")
+        st.caption(
+            "Voltage drop spikes when power demand exceeds the "
+            "grid's capacity. Combined with high temperature, this is the "
+            "key signature of an imminent overload."
+        )
